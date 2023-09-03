@@ -8,6 +8,11 @@ on:
 
 name: R CMD check
 
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  R_KEEP_PKG_SOURCE: yes
+  PACKAGE_NAME: libkrigingtemplate
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
@@ -22,10 +27,6 @@ jobs:
           - { os: macOS-latest,   r-version: 'release' }
           - { os: ubuntu-latest,  r-version: 'release' }
           - { os: ubuntu-latest,  r-version: 'devel', http-user-agent: 'release' }
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      R_KEEP_PKG_SOURCE: yes
 
     steps:
       - uses: actions/checkout@v3

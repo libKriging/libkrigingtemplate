@@ -11,6 +11,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  PACKAGE_NAME: libkrigingtemplate
+
 jobs:
   install_github:
     strategy:
@@ -24,10 +29,6 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}
 
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-    
     steps:
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -52,9 +53,9 @@ jobs:
         run: |
           # Add --insecure to workaround missing certificates on Windows
           # --header is not required by an useful example if the repo becomes private 
-          curl --insecure --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -LO https://raw.githubusercontent.com/libKriging/libkrigingtemplate/${{ env.BRANCH_NAME }}/tools/install_packages.R
+          curl --insecure --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -LO https://raw.githubusercontent.com/libKriging/${{ env.PACKAGE_NAME }}/${{ env.BRANCH_NAME }}/tools/install_packages.R
           Rscript --no-save ./install_packages.R devtools
 
       - name: install_github from ${{ env.BRANCH_NAME }}
         shell: bash
-        run: Rscript -e "library(devtools); install_github('libKriging/libkrigingtemplate', ref='${{ env.BRANCH_NAME }}'); if (!library('libkrigingtemplate', character.only=TRUE, logical.return=TRUE)) quit(status=1, save='no')"
+        run: Rscript -e "library(devtools); install_github('libKriging/${{ env.PACKAGE_NAME }}', ref='${{ env.BRANCH_NAME }}'); if (!library('${{ env.PACKAGE_NAME }}', character.only=TRUE, logical.return=TRUE)) quit(status=1, save='no')"
