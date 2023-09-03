@@ -17,10 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: windows-latest, rust-version: 'stable' }
-          - { os: macOS-latest,   rust-version: 'stable' }
-          - { os: ubuntu-latest,  rust-version: 'stable' }
-          - { os: ubuntu-latest,  rust-version: 'stable' }
+          - { os: windows-latest }
+          - { os: macOS-latest }
+          - { os: ubuntu-latest }
         r-version: [ '4.3' ]
 
     runs-on: ${{ matrix.config.os }}
@@ -37,7 +36,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.config.rust-version }}
+          toolchain: stable
           override: true
 
       - name: Install devtools
