@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: windows-latest, rust-version: 'stable-msvc', rust-target: 'x86_64-pc-windows-gnu' }
+          - { os: windows-latest, rust-version: 'stable' }
           - { os: macOS-latest,   rust-version: 'stable' }
           - { os: ubuntu-latest,  rust-version: 'stable' }
           - { os: ubuntu-latest,  rust-version: 'stable' }
@@ -35,10 +35,10 @@ jobs:
           r-version: ${{ matrix.r-version }}
           rtools-version: '43'
 
-      - uses: dtolnay/rust-toolchain@master
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.config.rust-version }}
-          targets: ${{ matrix.config.rust-target }}
+          override: true
 
       - name: Install devtools
         shell: bash
