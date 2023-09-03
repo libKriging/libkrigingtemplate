@@ -1,0 +1,101 @@
+name: R CMD check in rhub images
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 2 * * SAT'
+
+env:
+  PACKAGE_NAME: libkrigingtemplate
+
+jobs:
+  rhub-local_check:
+    name: Linux ${{ matrix.rhubos }}
+    strategy:
+      fail-fast: false
+      matrix:
+        #rhub::local_check_linux_images()
+        rhubos: [ 'debian-clang-devel','debian-gcc-devel','debian-gcc-devel-nold','debian-gcc-patched','debian-gcc-release','fedora-clang-devel','fedora-gcc-devel','rocker-gcc-san','ubuntu-gcc-devel','ubuntu-gcc-release' ]
+        # not suitable for compile: ,'ubuntu-rchk' ]
+
+    runs-on: ubuntu-latest
+    container:
+      image: rhub/${{ matrix.rhubos }}
+      options: --user root
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Add dependencies
+        shell: bash
+        run: |
+          DIST_ID=$(cat /etc/*-release | grep ID | cut -d= -f2 | head -1 | tr -d '\t')
+          if [ "${DIST_ID}" = "fedora" ]; then
+            dnf install -y git cmake gfortran libcurl-devel libxml2-devel openssl-devel fontconfig-devel hdf5-devel;
+          else 
+            apt-get update
+            apt-get install -y git cmake gfortran libcurl4-openssl-dev libharfbuzz-dev libfribidi-dev libxml2-dev libssl-dev libfontconfig1-dev libhdf5-dev
+          fi
+
+      - name: Remove tmp requirements
+        shell: bash
+        run: |
+          DIST_ID=$(cat /etc/*-release | grep ID | cut -d= -f2 | head -1 | tr -d '\t')
+          if [ "${DIST_ID}" = "fedora" ]; then
+            dnf remove -y git;
+          else 
+            apt-get remove -y git;
+          fi
+
+      - name: Install devtools
+        shell: bash
+        run: |
+          # Add --insecure to workaround missing certificates on Windows
+          # --header is not required by an useful example if the repo becomes private 
+          curl --insecure --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -LO https://raw.githubusercontent.com/libKriging/${{ env.PACKAGE_NAME }}/${{ env.BRANCH_NAME }}/tools/install_packages.R
+          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+          Rscript --no-save ./install_packages.R devtools
+
+      - name: devtools install_deps from ${{ env.BRANCH_NAME }}
+        shell: bash
+        run: |
+          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+          Rscript -e "library(devtools); install_deps('.',dependencies = TRUE)"
+
+      - name: setup for CRAN
+        shell: bash
+        run: |
+          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+          Rscript --no-save ./install_packages.R roxygen2
+          Rscript -e "remove.packages('roxygen2')"
+
+      - name: R CMD build
+        shell: bash
+        env: # this alias helps to reuse following line as script
+          OS: ${{ matrix.rhubos }}
+        run: |
+          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+          R CMD build .
+          mkdir CRAN-$OS
+          mv ${{ env.PACKAGE_NAME }}_*.* CRAN-$OS/.
+
+      - name: R CMD check
+        shell: bash
+        env:
+          OS: ${{ matrix.rhubos }}
+        run: |
+          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+          R CMD check --as-cran --no-manual CRAN-$OS/${{ env.PACKAGE_NAME }}* || (
+            test -f ${{ env.PACKAGE_NAME }}.Rcheck/00install.out && cat ${{ env.PACKAGE_NAME }}.Rcheck/00install.out | sed -e 's/^/00install.out| /' && echo "[The error may be shown before 00install.out| listing"; 
+            exit 1
+          )

@@ -1,0 +1,49 @@
+name: R CMD INSTALL
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 2 * * SAT'
+
+env:
+  PACKAGE_NAME: libkrigingtemplate
+
+jobs:
+  release:
+    name: ${{ matrix.os }} (${{ matrix.R }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+        R: [ '4.3' ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.R }}
+          rtools-version: '43'
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: R CMD INSTALL
+        shell: bash
+        run: |
+          R CMD INSTALL --build . 
+          mkdir R-${{ matrix.R }}
+          mv ${{ env.PACKAGE_NAME }}*.* R-${{ matrix.R }}/.
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./R-*
+
+      - uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ./R-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
