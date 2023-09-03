@@ -1,0 +1,12 @@
+.idea
+/*.tar.gz
+/.Rproj.user
+/.Rhistory
+/.RData
+/.Ruserdata
+*.a
+*.o
+*.so
+/src/rust/vendor
+/src/rust/vendor.tar.xz
+/src/rust/**/target
