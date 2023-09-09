@@ -47,6 +47,12 @@ jobs:
             apt-get install -y git cmake gfortran libcurl4-openssl-dev libharfbuzz-dev libfribidi-dev libxml2-dev libssl-dev libfontconfig1-dev libhdf5-dev
           fi
 
+      - name: Add workaround dependencies
+        shell: bash
+        run: |
+          apt install -y libc++-dev libc++abi-dev
+        if: matrix.rhubos == 'debian-clang-devel'
+
       - name: Remove tmp requirements
         shell: bash
         run: |
