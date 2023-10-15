@@ -1,0 +1,67 @@
+name: Guidelines check
+
+on:
+  push:
+  schedule:
+    - cron: '0 2 * * SAT'
+
+env:
+  PIP_CACHE_PATH: ~/.cache/pip
+
+jobs:
+  checks:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rust_version: [ "1.69" ]
+        os: [ "ubuntu-20.04" ]
+        tool:
+          - { name: "fmt", command: "cargo fmt --check --all" }
+          - { name: "clippy", command: "cargo clippy --workspace -- -D warnings" }
+
+    name: "Rust ${{ matrix.tool.name }} check for ${{ matrix.rust_version }}"
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src/rust/target/
+          key: ${{ runner.os }}-rustc-${{ matrix.rust_version }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: ${{ matrix.tool.command }}
+        shell: bash
+        run: |
+          cd src/rust
+          ${{ matrix.tool.command }}
+
+  filesize:
+    runs-on: "ubuntu-20.04"
+    name: "Big file check"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: "List big files"
+        shell: bash
+        run: |
+          known_big_files=("./src/rust/Cargo.lock")
+          unauthorized_big_files=$(comm -23 <(find -type f -size +100k -not -path "./.git/*" | sort) <(IFS=$'\n'; echo "${known_big_files[*]}" | sort))
+          if [ -n "$unauthorized_big_files" ]; then
+            echo "Unauthorized big files:"
+            echo $unauthorized_big_files | awk '{print "  "$0}'
+            exit 1
+          fi

@@ -1,0 +1,45 @@
+# To debug a workflow see: https://docs.github.com/en/actions/configuring-and-managing-workflows/managing-a-workflow-run#enabling-debug-logging
+
+name: Build & test CI
+
+on:
+  push:
+  schedule:
+    - cron: '0 2 * * SAT'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        rust_version: [ "1.69" ]
+        os: [ "ubuntu-20.04", "macOS-12" ] # TODO re-enabled "windows-latest"
+
+    name: "Rust ${{ matrix.rust_version }} on ${{ matrix.os }}"
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+
+      - name: Rust cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src/rust/target/
+          key: ${{ runner.os }}-rustc-${{ matrix.rust_version }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - uses: davidB/rust-cargo-make@v1 # faster
+
+      - name: Rust workspace
+        shell: bash
+        run: |
+          cd src/rust
+          cargo make test
