@@ -1,3 +1,5 @@
+mod linear_regression;
+
 use extendr_api::prelude::*;
 
 /// Return string `"Hello world!"` to R.
@@ -13,4 +15,10 @@ fn hello_world() -> &'static str {
 extendr_module! {
     mod libkrigingtemplate;
     fn hello_world;
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn rs_compile() {}
 }
