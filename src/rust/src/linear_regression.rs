@@ -1,50 +1,6 @@
+use crate::math_types::{ColVec, Mat};
+use crate::rectangle_solve::rectangle_solve;
 use anyhow::{anyhow, Result};
-
-type ColVec = nalgebra::DVector<f64>;
-
-type Mat = nalgebra::DMatrix<f64>;
-
-pub fn solve1(x: Mat, y: &ColVec) -> Result<ColVec> {
-    // println!("x : {:?}", x.shape());
-    let qr = x.qr();
-    // println!("q: {:?}", qr.q().shape());
-
-    let mut y = Mat::transpose(&qr.q()) * y;
-    // println!("tr(q)*y: {}", y);
-
-    let r = qr.unpack_r();
-    // println!("r: {:?}", r.shape());
-
-    let solved = r.solve_upper_triangular_mut(&mut y);
-    if solved {
-        Ok(y)
-    } else {
-        Err(anyhow!("Cannot solve"))
-    }
-}
-
-pub fn solve(x: Mat, y: &ColVec) -> Result<ColVec> {
-    // println!("x : {:?}", x.shape());
-    let qr = x.qr();
-
-    // println!("q: {:?}", qr.q().shape());
-
-    let mut y = y.clone();
-    qr.q_tr_mul(&mut y);
-    // println!("tr(q)*y: {}", y);
-
-    let r = qr.unpack_r();
-    // println!("r: {:?}", r.shape());
-
-    y.resize_vertically_mut(r.shape().0, f64::NAN);
-
-    let solved = r.solve_upper_triangular_mut(&mut y);
-    if solved {
-        Ok(y)
-    } else {
-        Err(anyhow!("Cannot solve"))
-    }
-}
 
 struct LinearRegression {
     coef: ColVec,
@@ -78,7 +34,7 @@ impl FitAndPredict for LinearRegression {
     fn fit(y: &ColVec, x: Mat) -> Result<Self> {
         let (n, k) = x.shape();
 
-        let coef = solve(x.clone(), y)?;
+        let coef = rectangle_solve(x.clone(), y)?;
         // println!("coef = {coef}");
         let resid = y - &x * &coef;
         let sig2_mat = (resid.transpose() * resid) / (n as f64 - k as f64);

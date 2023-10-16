@@ -1,4 +1,6 @@
 mod linear_regression;
+mod math_types;
+mod rectangle_solve;
 
 use extendr_api::prelude::*;
 
