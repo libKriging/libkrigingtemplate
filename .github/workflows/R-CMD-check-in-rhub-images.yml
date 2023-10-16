@@ -63,14 +63,21 @@ jobs:
             apt-get remove -y git;
           fi
 
-      - name: Install devtools
-        shell: bash
-        run: |
-          # Add --insecure to workaround missing certificates on Windows
-          # --header is not required by an useful example if the repo becomes private 
-          curl --insecure --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -LO https://raw.githubusercontent.com/libKriging/${{ env.PACKAGE_NAME }}/${{ env.BRANCH_NAME }}/tools/install_packages.R
-          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
-          Rscript --no-save ./install_packages.R devtools
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            devtools
+            roxygen2
+
+#      - name: Install devtools
+#        shell: bash
+#        run: |
+#          # Add --insecure to workaround missing certificates on Windows
+#          # --header is not required by an useful example if the repo becomes private
+#          curl --insecure --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -LO https://raw.githubusercontent.com/libKriging/${{ env.PACKAGE_NAME }}/${{ env.BRANCH_NAME }}/tools/install_packages.R
+#          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+#          Rscript --no-save ./install_packages.R devtools
 
       - name: devtools install_deps from ${{ env.BRANCH_NAME }}
         shell: bash
@@ -78,12 +85,12 @@ jobs:
           export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
           Rscript -e "library(devtools); install_deps('.',dependencies = TRUE)"
 
-      - name: setup for CRAN
-        shell: bash
-        run: |
-          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
-          Rscript --no-save ./install_packages.R roxygen2
-          Rscript -e "remove.packages('roxygen2')"
+#      - name: setup for CRAN
+#        shell: bash
+#        run: |
+#          export PATH=$PATH:/opt/R-devel/bin/:/opt/R-patched/bin/:/opt/R/bin
+#          Rscript --no-save ./install_packages.R roxygen2
+#          Rscript -e "remove.packages('roxygen2')"
 
       - name: R CMD build
         shell: bash

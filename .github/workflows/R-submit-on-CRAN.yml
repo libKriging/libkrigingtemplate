@@ -33,12 +33,15 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache: false
+          cache-version: 2
+          extra-packages: |
+            pkgbuild
+            roxygen2
 
       - name: setup for CRAN
         shell: bash
         run: |
-          Rscript --no-save ./tools/install_packages.R pkgbuild roxygen2
+          # Rscript --no-save ./tools/install_packages.R pkgbuild roxygen2
           Rscript -e "remove.packages('roxygen2')"
 
       - name: R CMD build
