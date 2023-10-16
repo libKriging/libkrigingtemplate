@@ -8,8 +8,7 @@ crate-type = ['staticlib']
 
 [dependencies]
 anyhow = "1.0"
-extendr-api = '*'
-#nalgebra = "0.32"
+extendr-api = '0.6'
 nalgebra = "0.32"
 rand = "0.8"
 rand_distr = "0.4"
