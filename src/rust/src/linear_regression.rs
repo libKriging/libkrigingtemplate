@@ -67,6 +67,7 @@ impl FitAndPredict for LinearRegression {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math_utils::norm_inf;
     use rand::thread_rng;
     use rand_distr::Distribution;
     use rstest::rstest;
@@ -93,8 +94,7 @@ mod tests {
             let rl = LinearRegression::fit(&y, x.clone()).unwrap();
             let (y_pred, _) = rl.predict(&x);
             let eps = 1e-5;
-            let norm_inf = (y - y_pred).abs().max();
-            assert!(norm_inf < 10. * eps);
+            assert!(norm_inf(y - y_pred) < 10. * eps);
         }
 
         // WHEN value is computed with noise
@@ -111,8 +111,7 @@ mod tests {
             let rl = LinearRegression::fit(&y, x.clone()).unwrap();
             let (y_pred, _) = rl.predict(&x);
             let eps = 1e-5;
-            let norm_inf = (y - y_pred).abs().max();
-            assert!(norm_inf < 10. * eps + 10. * e);
+            assert!(norm_inf(y - y_pred) < 10. * eps + 10. * e);
         }
     }
 }

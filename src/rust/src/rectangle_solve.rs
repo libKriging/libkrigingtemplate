@@ -50,9 +50,10 @@ fn solve2(x: Mat, y: &ColVec) -> Result<ColVec> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math_utils::norm_inf;
     #[test]
     fn test_qr() {
-        let x = Mat::from_row_slice(
+        let a = Mat::from_row_slice(
             12,
             2,
             &[
@@ -66,21 +67,27 @@ mod tests {
             ],
         );
 
-        let y = ColVec::from_row_slice(&[1.; 12]);
+        println!("a: {a}");
 
-        println!("x: {x}");
-
-        let qr = x.clone().qr();
+        let qr = a.clone().qr();
         let q = qr.q();
         let r = qr.r();
 
         println!("q: {q}");
         println!("r: {r}");
 
-        println!("tr(q)*q: {}", Mat::transpose(&q) * &q);
+        let tr_q_q = Mat::transpose(&q) * &q;
+        println!("tr(q)*q: {tr_q_q}");
 
-        let a = &q * r;
+        let tr_q_q_err = norm_inf(tr_q_q - Mat::identity(a.ncols(), a.ncols()));
+        println!("|tr(q)*q - I|: {tr_q_q_err}");
+        assert!(tr_q_q_err < 1e-15);
 
-        println!("a: {a}");
+        let rebuilt_a = &q * r;
+        println!("rebuilt a: {rebuilt_a}");
+
+        let a_err = norm_inf(rebuilt_a - a);
+        println!("|tr(q)*q - I|: {a_err}");
+        assert!(a_err < 1e-13);
     }
 }
