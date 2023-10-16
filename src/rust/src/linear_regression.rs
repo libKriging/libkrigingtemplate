@@ -1,3 +1,4 @@
+use crate::fit_and_predict::FitAndPredict;
 use crate::math_types::{ColVec, Mat};
 use crate::rectangle_solve::rectangle_solve;
 use anyhow::{anyhow, Result};
@@ -6,14 +7,6 @@ struct LinearRegression {
     coef: ColVec,
     sig2: f64,
     stderrest: ColVec,
-}
-
-trait FitAndPredict {
-    fn fit(v: &ColVec, x: Mat) -> Result<Self>
-    where
-        Self: Sized;
-
-    fn predict(&self, x: &Mat) -> (ColVec, ColVec);
 }
 
 impl LinearRegression {

@@ -1,3 +1,4 @@
+mod fit_and_predict;
 mod linear_regression;
 mod math_types;
 mod math_utils;
