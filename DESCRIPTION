@@ -11,7 +11,9 @@ Authors@R:
              family = "Havé",
              role = c("aut"),
              email = "hpwxf@haveneer.com"))
-Description: What the package does (one paragraph).
+Description: New package structure to refactor libkriging packages <https://github.com/libKriging> with a low level implementation is Rust.
+    The new structure will help to get a more portable package with lower efforts and a more efficient programming,
+    especially for concurrent programming.
 License: Apache License (>= 2)
 Encoding: UTF-8
 SystemRequirements: Cargo (Rust's package manager), rustc
