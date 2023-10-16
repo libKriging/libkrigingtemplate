@@ -3,7 +3,7 @@ use crate::math_types::{ColVec, Mat};
 use crate::rectangle_solve::rectangle_solve;
 use anyhow::{anyhow, Result};
 
-struct LinearRegression {
+pub struct LinearRegression {
     coef: ColVec,
     sig2: f64,
     stderrest: ColVec,
